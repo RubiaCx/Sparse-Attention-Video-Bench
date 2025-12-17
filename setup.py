@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-package_name = "" # to be changed
+package_name = "sparse_bench"
 
 
 def read_requirements():
@@ -17,11 +17,12 @@ def read_readme():
 
 setup(
     name=package_name,
+    packages=find_packages(exclude=["tests", "scripts"]),
     version=read_version(),
     install_requires=read_requirements(),
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    author="", # to be added
-    author_email="", # to be added
-    url="", # to be added
+    author="Shenggui Li",
+    author_email="somerlee.9@gmail.com",
+    url="https://github.com/FrankLeeeee/Sparse-Attention-Video-Bench",
 )

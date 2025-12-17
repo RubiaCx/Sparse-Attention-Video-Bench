@@ -1,0 +1,10 @@
+vbench
+openai
+lpips
+torcheval-nightly
+opencv-python
+scikit-image
+git+https://github.com/Po-Hsun-Su/pytorch-ssim.git
+torchvision
+torch
+av

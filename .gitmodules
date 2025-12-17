@@ -1,0 +1,3 @@
+[submodule "benchmarks/VBench"]
+	path = benchmarks/VBench
+	url = https://github.com/Vchitect/VBench.git
