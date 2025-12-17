@@ -1,7 +1,7 @@
 pre-commit
 diffusers==0.35.1
 transformers==4.55.4
-torch==2.8
+torch
 accelerate
 ftfy
 imageio-ffmpeg

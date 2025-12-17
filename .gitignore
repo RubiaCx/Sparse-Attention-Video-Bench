@@ -160,3 +160,4 @@ cython_debug/
 
 # mac cache
 .DS_Store
+outputs/
