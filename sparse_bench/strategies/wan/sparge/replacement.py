@@ -1,12 +1,17 @@
 try:
     from spas_sage_attn import spas_sage_attn_meansim_cuda
-except:
+except Exception:
     spas_sage_attn_meansim_cuda = None
     
+import os
+import warnings
 import torch
 import torch.nn.functional as F
 from typing import Optional, Tuple
 from diffusers.models.transformers.transformer_wan import _get_qkv_projections, _get_added_kv_projections, dispatch_attention_fn
+
+_ALLOW_SPARGE_FALLBACK = os.getenv("SPARSE_BENCH_ALLOW_FALLBACK", "0").lower() in {"1", "true", "yes", "y"}
+_WARNED_SPARGE_FALLBACK = False
 
 class WanSpargeAttnProcessor:
     _attention_backend = None
@@ -80,16 +85,37 @@ class WanSpargeAttnProcessor:
             hidden_states_img = hidden_states_img.flatten(2, 3)
             hidden_states_img = hidden_states_img.type_as(query)
 
-        hidden_states = spas_sage_attn_meansim_cuda(query, key, value, simthreshd1=0.6, cdfthreshd=0.98, is_causal=False, tensor_layout="NHD")
-        # hidden_states = dispatch_attention_fn(
-        #     query,
-        #     key,
-        #     value,
-        #     attn_mask=attention_mask,
-        #     dropout_p=0.0,
-        #     is_causal=False,
-        #     backend=self._attention_backend,
-        # )
+        if spas_sage_attn_meansim_cuda is None:
+            msg = (
+                "Sparge(Wan) 需要可选 CUDA 扩展 `spas_sage_attn`，但当前环境未能导入（spas_sage_attn_meansim_cuda=None）。"
+                "请先安装/编译该扩展；如果只是想先把流程跑通，可设置环境变量 "
+                "`SPARSE_BENCH_ALLOW_FALLBACK=1` 以退化到普通 attention（不代表 Sparge 性能/结果）。"
+            )
+            if not _ALLOW_SPARGE_FALLBACK:
+                raise RuntimeError(msg)
+            global _WARNED_SPARGE_FALLBACK
+            if not _WARNED_SPARGE_FALLBACK:
+                warnings.warn(msg, RuntimeWarning)
+                _WARNED_SPARGE_FALLBACK = True
+            hidden_states = dispatch_attention_fn(
+                query,
+                key,
+                value,
+                attn_mask=attention_mask,
+                dropout_p=0.0,
+                is_causal=False,
+                backend=self._attention_backend,
+            )
+        else:
+            hidden_states = spas_sage_attn_meansim_cuda(
+                query,
+                key,
+                value,
+                simthreshd1=0.6,
+                cdfthreshd=0.98,
+                is_causal=False,
+                tensor_layout="NHD",
+            )
         hidden_states = hidden_states.flatten(2, 3)
         hidden_states = hidden_states.type_as(query)
 

@@ -12,13 +12,18 @@ from diffusers.models.embeddings import apply_rotary_emb
 
 try:
     from spas_sage_attn import spas_sage_attn_meansim_cuda
-except:
+except Exception:
     spas_sage_attn_meansim_cuda = None
+
+import os
+import warnings
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 USE_PEFT_BACKEND = False
+_ALLOW_SPARGE_FALLBACK = os.getenv("SPARSE_BENCH_ALLOW_FALLBACK", "0").lower() in {"1", "true", "yes", "y"}
+_WARNED_SPARGE_FALLBACK = False
 
 
 class HunyuanVideoSpargeAttnProcessor2_0(HunyuanVideoAttnProcessor2_0):
@@ -97,10 +102,31 @@ class HunyuanVideoSpargeAttnProcessor2_0(HunyuanVideoAttnProcessor2_0):
             value = torch.cat([value, encoder_value], dim=2)
 
         # 5. Attention
-        hidden_states = spas_sage_attn_meansim_cuda(query, key, value, simthreshd1=0.6, cdfthreshd=0.98, is_causal=False, tensor_layout="HND")
-        # hidden_states = F.scaled_dot_product_attention(
-        #     query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
-        # )
+        if spas_sage_attn_meansim_cuda is None:
+            msg = (
+                "Sparge(Hunyuan) 需要可选 CUDA 扩展 `spas_sage_attn`，但当前环境未能导入（spas_sage_attn_meansim_cuda=None）。"
+                "请先安装/编译该扩展；如果只是想先把流程跑通，可设置环境变量 "
+                "`SPARSE_BENCH_ALLOW_FALLBACK=1` 以退化到普通 attention（不代表 Sparge 性能/结果）。"
+            )
+            if not _ALLOW_SPARGE_FALLBACK:
+                raise RuntimeError(msg)
+            global _WARNED_SPARGE_FALLBACK
+            if not _WARNED_SPARGE_FALLBACK:
+                warnings.warn(msg, RuntimeWarning)
+                _WARNED_SPARGE_FALLBACK = True
+            hidden_states = F.scaled_dot_product_attention(
+                query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
+            )
+        else:
+            hidden_states = spas_sage_attn_meansim_cuda(
+                query,
+                key,
+                value,
+                simthreshd1=0.6,
+                cdfthreshd=0.98,
+                is_causal=False,
+                tensor_layout="HND",
+            )
         hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
         hidden_states = hidden_states.to(query.dtype)
 
