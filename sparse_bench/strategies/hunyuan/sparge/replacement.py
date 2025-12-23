@@ -104,9 +104,9 @@ class HunyuanVideoSpargeAttnProcessor2_0(HunyuanVideoAttnProcessor2_0):
         # 5. Attention
         if spas_sage_attn_meansim_cuda is None:
             msg = (
-                "Sparge(Hunyuan) 需要可选 CUDA 扩展 `spas_sage_attn`，但当前环境未能导入（spas_sage_attn_meansim_cuda=None）。"
-                "请先安装/编译该扩展；如果只是想先把流程跑通，可设置环境变量 "
-                "`SPARSE_BENCH_ALLOW_FALLBACK=1` 以退化到普通 attention（不代表 Sparge 性能/结果）。"
+                "Sparge(Hunyuan) requires the optional CUDA extension `spas_sage_attn`, but it could not be imported (spas_sage_attn_meansim_cuda=None). "
+                "Please install/compile the extension first. To run the process anyway, you can set the environment variable "
+                "`SPARSE_BENCH_ALLOW_FALLBACK=1` to fall back to standard attention (this does not represent Sparge's performance/results)."
             )
             if not _ALLOW_SPARGE_FALLBACK:
                 raise RuntimeError(msg)
