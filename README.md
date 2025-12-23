@@ -6,7 +6,7 @@ This repository serves as a benchmark for variou video sparse attention methods,
 ## Get Started
 
 ```bash
-cd /workspace/Sparse-Attention-Video-Bench
+cd Sparse-Attention-Video-Bench
 python3 -m venv .venv
 . .venv/bin/activate
 ## If your venv was created without pip (common in minimal docker images), bootstrap it:
