@@ -20,3 +20,7 @@ def init_distributed():
 def get_time_stamp():
     torch.cuda.synchronize()
     return time.time()
+
+# Backward-compatible alias (some scripts used the older name).
+def get_timestamp():
+    return get_time_stamp()

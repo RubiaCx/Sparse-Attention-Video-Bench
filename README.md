@@ -24,5 +24,9 @@ python -m pip install --no-cache-dir -v -e . --no-build-isolation
 
 bash ./examples/wan1.3b/run_wan1.3b_dense.sh
 bash ./examples/wan1.3b/run_wan1.3b_svg.sh
+<<<<<<< HEAD
+=======
+bash ./examples/wan1.3b/run_wan1.3b_sap.sh
+>>>>>>> 306a42f (save local changes before attaching remote)
 bash ./examples/wan1.3b/run_wan1.3b_sparge.sh
 ```
